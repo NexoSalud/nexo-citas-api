@@ -1,28 +1,22 @@
 # ========================================================
-# Despliegue en Coolify via docker-compose
+# Despliegue en Coolify de nexo-citas-api
 # --------------------------------------------------------
-# IMPORTANTE (no usar Railpack/Nixpacks por defecto):
-#   En el servicio `api` del recurso Docker Compose debes
-#   seleccionar el Build Pack = Dockerfile. Railpack no
-#   puede compilar este proyecto (la dependencia privada
-#   nexo-core-spring exige GITHUB_TOKEN en el build).
+# La imagen se publica en GHCR via GitHub Actions
+# (ver .github/workflows/docker-publish.yml). Este compose
+# solo hace PULL de la imagen: no se compila en el servidor,
+# por lo que no hay build packs ni GITHUB_TOKEN de por medio.
 #
-# 1. En Coolify: "New Resource -> Docker Compose"
-# 2. Apunta a este repositorio / rama coolify
-# 3. Define las variables GITHUB_ACTOR y GITHUB_TOKEN
-#    (para resolver nexo-core-spring desde GitHub Packages)
-# 4. Configura las variables del servicio `api`
+# En Coolify usa cualquiera de estas opciones (ambas sin build):
+#   A) Recurso "Docker Compose"  -> apunta a este archivo.
+#   B) Recurso "Docker Image"    -> ghcr.io/nexosalud/nexo-citas-api:coolify
+#
+# Requiere una base de datos PostgreSQL alcanzable (sidecar `db`
+# o la DB que prefieras vía DB_HOST/DB_PORT).
 # ========================================================
 
 services:
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        GITHUB_ACTOR: ${GITHUB_ACTOR:?GITHUB_ACTOR es obligatorio}
-        GITHUB_TOKEN: ${GITHUB_TOKEN:?GITHUB_TOKEN es obligatorio}
-    image: nexo-citas-api:latest
+    image: ghcr.io/nexosalud/nexo-citas-api:${CITAS_IMAGE_TAG:-coolify}
     restart: unless-stopped
     container_name: nexo-citas-api
     ports:

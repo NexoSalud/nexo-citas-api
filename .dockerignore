@@ -4,5 +4,6 @@ target
 *.iml
 README.md
 .README.md
-
 .mvn
+.github
+nixpacks.toml

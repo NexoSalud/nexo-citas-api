@@ -1,0 +1,75 @@
+name: Build & Publish Docker Image (GHCR)
+
+# ========================================================
+# Publica la imagen de nexo-citas-api en GHCR.
+# En Coolify: recurso "Docker Image" apuntando a
+#   ghcr.io/nexosalud/nexo-citas-api:coolify
+# (Coolify solo hace pull y arranca el contenedor).
+#
+# Secrets requeridos en el repositorio
+# (Settings > Secrets and variables > Actions):
+#   GH_TOKEN  -> PAT con permisos read:packages y write:packages
+#                (para resolver nexo-core-spring privado y publicar GHCR)
+#   GH_ACTOR  -> (opcional) usuario dueño del PAT. Si no se define,
+#                se usa el actor del workflow (github.actor).
+# ========================================================
+
+on:
+  push:
+    branches:
+      - main
+      - coolify
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_TOKEN }}
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "TAGS=$IMAGE_NAME:${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "TAGS=$IMAGE_NAME:latest,$IMAGE_NAME:main" >> "$GITHUB_OUTPUT"
+          else
+            echo "TAGS=$IMAGE_NAME:${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.TAGS }}
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            GITHUB_ACTOR=${{ secrets.GH_ACTOR != '' && secrets.GH_ACTOR || github.actor }}
+            GITHUB_TOKEN=${{ secrets.GH_TOKEN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
