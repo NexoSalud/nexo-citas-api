@@ -1,11 +1,15 @@
-version: "3.8"
-
 # ========================================================
 # Despliegue en Coolify via docker-compose
 # --------------------------------------------------------
+# IMPORTANTE (no usar Railpack/Nixpacks por defecto):
+#   En el servicio `api` del recurso Docker Compose debes
+#   seleccionar el Build Pack = Dockerfile. Railpack no
+#   puede compilar este proyecto (la dependencia privada
+#   nexo-core-spring exige GITHUB_TOKEN en el build).
+#
 # 1. En Coolify: "New Resource -> Docker Compose"
 # 2. Apunta a este repositorio / rama coolify
-# 3. Define los secrets GITHUB_ACTOR y GITHUB_TOKEN
+# 3. Define las variables GITHUB_ACTOR y GITHUB_TOKEN
 #    (para resolver nexo-core-spring desde GitHub Packages)
 # 4. Configura las variables del servicio `api`
 # ========================================================
