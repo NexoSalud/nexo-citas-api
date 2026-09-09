@@ -1,7 +1,0 @@
-# Configuración de Nixpacks para desplegar nexo-citas-api desde GitHub Packages
-
-[phases.build]
-cmds = ["mvn -s settings.xml -DskipTests clean package"]
-
-[start]
-cmd = "java -jar target/nexo-citas-api-1.0.0-SNAPSHOT.jar"
