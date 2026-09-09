@@ -57,6 +57,12 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Health checks / gestión (requerido por el HEALTHCHECK del contenedor) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Base de Datos y Migraciones -->
         <dependency>
             <groupId>org.postgresql</groupId>

@@ -1,0 +1,71 @@
+version: "3.8"
+
+# ========================================================
+# Despliegue en Coolify via docker-compose
+# --------------------------------------------------------
+# 1. En Coolify: "New Resource -> Docker Compose"
+# 2. Apunta a este repositorio / rama coolify
+# 3. Define los secrets GITHUB_ACTOR y GITHUB_TOKEN
+#    (para resolver nexo-core-spring desde GitHub Packages)
+# 4. Configura las variables del servicio `api`
+# ========================================================
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GITHUB_ACTOR: ${GITHUB_ACTOR:?GITHUB_ACTOR es obligatorio}
+        GITHUB_TOKEN: ${GITHUB_TOKEN:?GITHUB_TOKEN es obligatorio}
+    image: nexo-citas-api:latest
+    restart: unless-stopped
+    container_name: nexo-citas-api
+    ports:
+      - "8085:8085"
+    environment:
+      SERVER_PORT: "8085"
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-citas_db}
+      DB_USER: ${DB_USER:-nexo}
+      DB_PASSWORD: ${DB_PASSWORD:-nexo}
+      OUTBOX_ENABLED: ${OUTBOX_ENABLED:-true}
+      OUTBOX_POLL_INTERVAL_MS: ${OUTBOX_POLL_INTERVAL_MS:-2000}
+      PERSONAL_SERVICE_URL: ${PERSONAL_SERVICE_URL:-http://nexo-personal-api:8081}
+      KEYCLOAK_ENABLED: ${KEYCLOAK_ENABLED:-true}
+      KEYCLOAK_HOST: ${KEYCLOAK_HOST:-https://nexoauth.app.goline.com.co}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-nexo2.0}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-nexo-gateway-service}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-NexoGatewaySecret2026KeycloakServiceAccount}
+      LOG_LEVEL_NEXO: ${LOG_LEVEL_NEXO:-DEBUG}
+      LOG_LEVEL_HIBERNATE: ${LOG_LEVEL_HIBERNATE:-INFO}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    container_name: nexo-citas-db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME:-citas_db}
+      POSTGRES_USER: ${DB_USER:-nexo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nexo}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-nexo} -d ${DB_NAME:-citas_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  db-data:

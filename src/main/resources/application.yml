@@ -39,6 +39,22 @@ nexo:
   personal-service:
     url: ${PERSONAL_SERVICE_URL:http://localhost:8081}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
 logging:
   level:
     root: INFO
