@@ -5,23 +5,16 @@
 FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
 
-# Credenciales de GitHub Packages (pasadas como build args en Coolify).
-# Se exportan como ENV para que settings.xml los lea via ${env.GITHUB_ACTOR}.
+# Credenciales de GitHub Packages. Coolify debe proporcionarlas como build args,
+# no solo como variables de entorno del contenedor.
 ARG GITHUB_ACTOR
 ARG GITHUB_TOKEN
-ENV GITHUB_ACTOR=${GITHUB_ACTOR} \
-    GITHUB_TOKEN=${GITHUB_TOKEN}
-
-# Cache de dependencias Maven para builds incrementales rápidos en Coolify
-# (requiere BuildKit / docker-container driver de Coolify).
-RUN --mount=type=cache,target=/root/.m2 mkdir -p /root/.m2/repository
 
 COPY settings.xml pom.xml ./
-RUN --mount=type=cache,target=/root/.m2/repository \
-    mvn -s settings.xml -B dependency:go-offline
-
 COPY src ./src
-RUN --mount=type=cache,target=/root/.m2/repository \
+RUN test -n "$GITHUB_ACTOR" || (echo "ERROR: falta el build arg GITHUB_ACTOR" >&2; exit 1)
+RUN test -n "$GITHUB_TOKEN" || (echo "ERROR: falta el build arg GITHUB_TOKEN" >&2; exit 1)
+RUN GITHUB_ACTOR="$GITHUB_ACTOR" GITHUB_TOKEN="$GITHUB_TOKEN" \
     mvn -s settings.xml -B -DskipTests clean package
 
 # Stage 2: Runtime Stage
