@@ -4,6 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexo.citas.domain.reglas.CondicionEvaluador;
 import com.nexo.citas.domain.reglas.Motor3280;
 import com.nexo.citas.domain.reglas.ReglaProvider;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -13,7 +18,20 @@ import org.springframework.web.client.RestTemplate;
  * desacoplado de Spring: se inyecta vía constructor la interfaz ReglaProvider.
  */
 @Configuration
+@EnableCaching
 public class CitasBeans {
+
+    @Bean
+    public CacheManager cacheManager(
+            @Value("${nexo.cache.ttl-seconds:15}") long ttlSeconds,
+            @Value("${nexo.cache.max-size:1000}") long maxSize) {
+        CaffeineCacheManager manager = new CaffeineCacheManager(
+                "appointmentsByPatient", "appointmentById", "appointmentAvailability");
+        manager.setCaffeine(Caffeine.newBuilder()
+                .expireAfterWrite(java.time.Duration.ofSeconds(ttlSeconds))
+                .maximumSize(maxSize));
+        return manager;
+    }
 
     @Bean
     public CondicionEvaluador condicionEvaluador() {

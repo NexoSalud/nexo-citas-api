@@ -17,10 +17,10 @@ public interface CitaRepository extends JpaRepository<CitaEntity, String> {
 
     List<CitaEntity> findByPacienteIdOrderByFechaDesc(String pacienteId);
 
-    @Query("SELECT c FROM CitaEntity c WHERE c.consultorioId = :consultorioId "
+    @Query("SELECT c FROM CitaEntity c WHERE c.especialidadTipoId = :especialidadTipoId "
             + "AND c.estado IN ('CREADA','FACTURADA','REAGENDADA_SISTEMA') "
             + "AND c.horaInicio < :fin AND c.horaFin > :inicio")
-    List<CitaEntity> findByRango(@Param("consultorioId") Long consultorioId,
+    List<CitaEntity> findByRango(@Param("especialidadTipoId") Long especialidadTipoId,
                                  @Param("inicio") LocalDateTime inicio,
                                  @Param("fin") LocalDateTime fin);
 

@@ -28,6 +28,8 @@ import com.nexo.citas.repository.CitaRepository;
 import com.nexo.citas.repository.DisponibilidadSlotRepository;
 import com.nexo.citas.repository.EspecialidadTipoRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -87,6 +89,7 @@ public class CitaService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = {"appointmentsByPatient", "appointmentById", "appointmentAvailability"}, allEntries = true)
     public CitaResponse crearCita(CrearCitaRequest req) {
         esTipoValido(req.getEspecialidadTipoId());
 
@@ -176,6 +179,7 @@ public class CitaService {
      * "Agregar con un clic": crea un pipeline secuencial de citas preventivas sugeridas.
      */
     @Transactional
+    @CacheEvict(cacheNames = {"appointmentsByPatient", "appointmentById", "appointmentAvailability"}, allEntries = true)
     public CitaResponse crearPipeline(String citaOrigenId, Long citaHijaEspecialidadTipoId) {
         CitaEntity origen = citaRepository.findById(citaOrigenId)
                 .orElseThrow(() -> new EntityNotFoundException("Cita origen no encontrada: " + citaOrigenId));
@@ -231,6 +235,7 @@ public class CitaService {
      * Transicion de la maquina de estados con integracion por eventos.
      */
     @Transactional
+    @CacheEvict(cacheNames = {"appointmentsByPatient", "appointmentById", "appointmentAvailability"}, allEntries = true)
     public CitaResponse transicionar(String id, EstadoCita nuevo, String causa, String actor) {
         CitaEntity entidad = citaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada: " + id));
@@ -262,6 +267,7 @@ public class CitaService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "appointmentById", key = "#id")
     public CitaResponse getById(String id) {
         CitaEntity entidad = citaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada: " + id));
@@ -277,6 +283,7 @@ public class CitaService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "appointmentsByPatient", key = "#pacienteId")
     public List<CitaResponse> listarPorPaciente(String pacienteId) {
         return citaRepository.findByPacienteIdOrderByFechaDesc(pacienteId).stream()
                 .map(e -> {
@@ -297,6 +304,7 @@ public class CitaService {
      * de nexo-personal-api con las citas activas ya reservadas en esa agenda.
      */
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "appointmentAvailability", key = "#agendaId + ':' + #fecha")
     public List<DisponibilidadResponse> getDisponibilidad(Long agendaId, LocalDate fecha) {
         List<SlotDto> slots;
         try {

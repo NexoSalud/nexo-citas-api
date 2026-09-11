@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:8085}
+  port: ${SERVER_PORT:8087}
 
 spring:
   application:
@@ -11,8 +11,8 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -38,6 +38,9 @@ nexo:
     poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:2000}
   personal-service:
     url: ${PERSONAL_SERVICE_URL:http://localhost:8081}
+  cache:
+    ttl-seconds: ${CITAS_CACHE_TTL_SECONDS:15}
+    max-size: ${CITAS_CACHE_MAX_SIZE:1000}
 
 management:
   endpoints:

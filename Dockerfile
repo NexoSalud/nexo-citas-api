@@ -29,9 +29,9 @@ COPY --from=builder /app/target/*.jar app.jar
 # JVM optimizada para contenedores (límites de cgroup automáticos)
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:InitialRAMPercentage=50 -XX:+UseContainerSupport -Djava.security.egd=file:/dev/./urandom"
 
-EXPOSE 8085
+EXPOSE 8087
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
-    CMD curl -fsS http://localhost:8085/actuator/health || exit 1
+    CMD curl -fsS http://localhost:8087/actuator/health || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

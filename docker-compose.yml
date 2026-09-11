@@ -20,9 +20,9 @@ services:
     restart: unless-stopped
     container_name: nexo-citas-api
     ports:
-      - "8085:8085"
+      - "8087:8087"
     environment:
-      SERVER_PORT: "8085"
+      SERVER_PORT: "8087"
       DB_HOST: ${DB_HOST:-db}
       DB_PORT: "5432"
       DB_NAME: ${DB_NAME:-citas_db}
@@ -38,11 +38,13 @@ services:
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-NexoGatewaySecret2026KeycloakServiceAccount}
       LOG_LEVEL_NEXO: ${LOG_LEVEL_NEXO:-DEBUG}
       LOG_LEVEL_HIBERNATE: ${LOG_LEVEL_HIBERNATE:-INFO}
+      CITAS_CACHE_TTL_SECONDS: ${CITAS_CACHE_TTL_SECONDS:-15}
+      CITAS_CACHE_MAX_SIZE: ${CITAS_CACHE_MAX_SIZE:-1000}
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8085/actuator/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8087/actuator/health"]
       interval: 30s
       timeout: 5s
       retries: 5
